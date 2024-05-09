@@ -2,7 +2,7 @@ group 'com.aaalkoud.flutter_ankidroid'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.9.24'
     repositories {
         google()
         mavenCentral()
@@ -48,6 +48,5 @@ android {
 repositories { maven { url 'https://jitpack.io' } }
 
 dependencies {
-    implementation 'com.github.ankidroid:Anki-Android:api-v1.1.0'
+    implementation 'com.github.ankidroid:Anki-Android:v2.17.4'
 }
-

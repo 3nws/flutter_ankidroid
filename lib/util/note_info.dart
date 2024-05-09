@@ -5,10 +5,12 @@ class NoteInfo {
   final List<String> tags;
 
   const NoteInfo(this.id, this.fields, this.tags);
-  
-  NoteInfo.from(Map<dynamic, dynamic> map) : 
-    id = map['id']! as int, fields = List<String>.from(map['fields']!), tags = List<String>.from(map['tags']!);
-  
+
+  NoteInfo.from(Map<dynamic, dynamic> map)
+      : id = map["id"]! as int,
+        fields = List<String>.from(map["fields"]! as Iterable<dynamic>),
+        tags = List<String>.from(map["tags"]! as Iterable<dynamic>);
+
   static List<NoteInfo> fromList(List<Map<dynamic, dynamic>> list) {
     return list.map((e) => NoteInfo.from(e)).toList();
   }
