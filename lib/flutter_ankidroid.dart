@@ -4,7 +4,6 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:async/async.dart";
 import "package:flutter_isolate/flutter_isolate.dart";
-import "package:request_permission/request_permission.dart";
 
 import "util/future_result.dart";
 export "util/note_info.dart" show NoteInfo;
@@ -12,6 +11,7 @@ export "util/note_info.dart" show NoteInfo;
 class Ankidroid {
   final FlutterIsolate _isolate;
   final SendPort _ankiPort;
+  static const platform = MethodChannel('flutter_ankidroid/request');
 
   const Ankidroid._(this._isolate, this._ankiPort);
 
@@ -46,11 +46,10 @@ class Ankidroid {
   }
 
   static Future<void> askForPermission() async {
-    final perms = RequestPermission.instace;
-    if (!await perms.hasAndroidPermission(
-        "com.ichi2.anki.permission.READ_WRITE_DATABASE")) {
-      await perms.requestAndroidPermission(
-          "com.ichi2.anki.permission.READ_WRITE_DATABASE");
+    try {
+      await platform.invokeMethod('requestPermission');
+    } on PlatformException catch (e) {
+      debugPrint("Failed to request permission: '${e.message}'.");
     }
   }
 

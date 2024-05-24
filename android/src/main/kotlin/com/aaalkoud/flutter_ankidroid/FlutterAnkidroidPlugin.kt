@@ -5,12 +5,15 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
+import androidx.core.app.ActivityCompat
+import android.app.Activity
 import androidx.core.content.FileProvider
 import java.io.File
 
 import com.ichi2.anki.api.AddContentApi
 import io.flutter.embedding.engine.FlutterEngine
-
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -19,11 +22,29 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 
 /** FlutterAnkidroidPlugin */
-class FlutterAnkidroidPlugin: FlutterPlugin, MethodCallHandler {
+class FlutterAnkidroidPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private lateinit var channel : MethodChannel
     private lateinit var context: Context
     private lateinit var api : AddContentApi
+    private var activity: Activity? = null
+
+    
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        activity = binding.activity
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        activity = null
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        activity = binding.activity
+    }
+
+    override fun onDetachedFromActivity() {
+        activity = null
+    }
 
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -31,6 +52,23 @@ class FlutterAnkidroidPlugin: FlutterPlugin, MethodCallHandler {
         context = flutterPluginBinding.applicationContext
         api = AddContentApi(context)
         channel.setMethodCallHandler(this)
+
+        MethodChannel(flutterPluginBinding.binaryMessenger,  "flutter_ankidroid/request").setMethodCallHandler {
+            call, result ->
+            if (call.method == "requestPermission") {
+                activity?.let {
+                    if (ContextCompat.checkSelfPermission(activity!!,  "com.ichi2.anki.permission.READ_WRITE_DATABASE")
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(activity!!, arrayOf("com.ichi2.anki.permission.READ_WRITE_DATABASE"), 1)
+                        result.success(false)
+                    } else {
+                        result.success(true)
+                    }
+                } ?: result.error("NO_ACTIVITY", "Activity is not attached", null)
+            } else {
+                result.notImplemented()
+            }
+        }
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
