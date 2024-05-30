@@ -45,12 +45,13 @@ class Ankidroid {
     });
   }
 
-  static Future<void> askForPermission() async {
+  static Future<bool> askForPermission() async {
     try {
-      await platform.invokeMethod('requestPermission');
+      return await platform.invokeMethod('requestPermission') as bool;
     } on PlatformException catch (e) {
       debugPrint("Failed to request permission: '${e.message}'.");
     }
+    return false;
   }
 
   void killIsolate() => _isolate.kill();
